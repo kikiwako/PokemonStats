@@ -93,6 +93,10 @@
             width: 3rem;
         }
 
+        #rolls > button {
+            margin-bottom: 0.5rem;
+        }
+
         @media (max-width: 600px) {
             #container {
                 max-width: 100vw;
@@ -115,8 +119,10 @@
                 <button id="rollSpAttack">Sp. Attack</button>
                 <button id="rollDefense">Defense</button>
                 <button id="rollSpDefense">Sp. Defense</button>
-                <input type="number" name="customRoll" id="customRoll" />
-                <button id="rollAny">Custom</button>
+                <div>
+                    <input type="number" name="customRoll" id="customRoll" />
+                    <button id="rollAny">Custom</button>
+                </div>
             </div>
             <p>
                 Result :
