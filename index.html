@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+
+        <!-- Fonts -->
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400;500;700;900&display=swap"
+            rel="stylesheet"
+        />
+
+        <title>Pokemon Stats</title>
+    </head>
+
+    <style>
+        body {
+            font-size: 1rem;
+            background-color: #333;
+            color: #ddd;
+            font-family: "Roboto", sans-serif;
+        }
+
+        a {
+            color: cyan;
+        }
+
+        #container {
+            width: 100%;
+            max-width: 33rem;
+        }
+
+        input {
+            text-align: center;
+            background-color: #555;
+            color: white;
+        }
+
+        #infos {
+            width: 100%;
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+
+        .info {
+            width: calc((100% - 3rem) / 3);
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            text-align: center;
+        }
+
+        #moves {
+            width: 100%;
+        }
+
+        .move {
+            display: flex;
+            gap: 0.5rem;
+            width: 100%;
+        }
+
+        .attack {
+            flex-grow: 1;
+        }
+
+        .type,
+        .category,
+        .power {
+            width: 5rem;
+        }
+
+        .special {
+            width: 34rem;
+        }
+
+        .pp > div > input {
+            width: 1.5rem;
+        }
+
+        #customRoll {
+            width: 3rem;
+        }
+    </style>
+
+    <body>
+        <div id="container">
+            <h3>Stats</h3>
+            <div id="infos"></div>
+
+            <h3>Moves</h3>
+            <div id="moves"></div>
+            <hr />
+
+            <h3>Rolls</h3>
+            <div id="rolls">
+                <button id="rollAttack">Attack</button>
+                <button id="rollSpAttack">Sp. Attack</button>
+                <button id="rollDefense">Defense</button>
+                <button id="rollSpDefense">Sp. Defense</button>
+                <input type="number" name="customRoll" id="customRoll" />
+                <button id="rollAny">Custom</button>
+            </div>
+            <p>
+                Result :
+                <span id="result">0</span>
+            </p>
+            <small id="lastRollTime"></small>
+
+            <br />
+            <br />
+
+            <div id="loadAndSaveButtons">
+                <input type="file" name="load" id="load" />
+                <button id="save">Save</button>
+                <button id="loadBtn">Load</button>
+            </div>
+
+            <br />
+
+            <a
+                href="http://www.psypokes.com/dex/stats.php"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Stat Calculator</a
+            >
+        </div>
+    </body>
+
+    <script type="text/javascript" src="test.js"></script>
+
+    <script>
+        const infos = [
+            { name: "Name", type: "text" },
+            { name: "Species", type: "text" },
+            { name: "Level", type: "number" },
+            { name: "HP", type: "number" },
+            { name: "Attack", type: "number" },
+            { name: "Defense", type: "number" },
+            { name: "Sp. Attack", type: "number" },
+            { name: "Sp. Defense", type: "number" },
+            { name: "Speed", type: "number" },
+        ];
+
+        const createInfosFields = () => {
+            const infosDom = document.getElementById("infos");
+
+            infos.forEach((info) => {
+                infosDom.innerHTML += `
+                <div class="info field">
+                    <label for="${info.name}">${info.name}</label>
+                    <input type="${info.type}" name="${info.name}" id="${info.name}" />
+                </div>
+                `;
+            });
+        };
+
+        const movesInfos = [
+            "attack",
+            "type",
+            "category",
+            "pp",
+            "ppmax",
+            "power",
+            "special",
+        ];
+
+        const createMovesFields = () => {
+            const movesDom = document.getElementById("moves");
+
+            for (let i = 1; i <= 4; i++) {
+                movesDom.innerHTML += `
+                <hr />
+                <div class="move">
+                    <div class="attack field">
+                        <label for="attack${i}">Attack</label>
+                        <input type="text" name="attack${i}" id="attack${i}" />
+                    </div>
+                    <div class="type field">
+                        <label for="type${i}">Type</label>
+                        <input type="text" name="type${i}" id="type${i}" />
+                        </div>
+                    <div class="category field">
+                        <label for="category${i}">Category</label>
+                        <input type="text" name="category${i}" id="category${i}" />
+                    </div>
+                    <div class="pp field">
+                        <label for="pp${i}">PP</label>
+                        <div>
+                            <input type="text" name="pp${i}" id="pp${i}" /> / <input type="text" name="ppmax${i}" id="ppmax${i}" />
+                        </div>
+                    </div>
+                    <div class="power field">
+                        <label for="power${i}">Power</label>
+                        <input type="text" name="power${i}" id="power${i}" />
+                    </div>
+                </div>
+                <div class="move" style="margin-top: 0.5rem; margin-bottom: 1rem">
+                    <div class="special field">
+                        <label for="special${i}">Special</label>
+                        <input type="text" name="special${i}" id="special${i}" />
+                    </div>
+                    <button id="rollDamage${i}">Roll Damage</button>
+                </div>
+                `;
+            }
+        };
+
+        const downloadJsonFile = (data, filename) => {
+            // Creating a blob object from non-blob data using the Blob constructor
+            const blob = new Blob([JSON.stringify(data)], {
+                type: "application/json",
+            });
+            const url = URL.createObjectURL(blob);
+            // Create a new anchor element
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = filename || "download";
+            a.click();
+            a.remove();
+        };
+
+        const downloadFile = () => {
+            const data = {};
+
+            infos.forEach((info) => {
+                data[info.name] = document.getElementById(info.name).value;
+            });
+
+            for (let i = 1; i <= 4; i++) {
+                movesInfos.forEach((move) => {
+                    data[move + i] = document.getElementById(move + i).value;
+                });
+            }
+
+            let filename = data.Species;
+            if (data.Name) filename += "_" + data.Name;
+            filename += "_lvl_" + data.Level;
+
+            downloadJsonFile(data, filename);
+        };
+
+        const loadPokemon = (data) => {
+            Object.keys(data).forEach((key) => {
+                document.getElementById(key).value = data[key];
+            });
+        };
+
+        const importFile = () => {
+            const fileInput = document.getElementById("load");
+            var importedFile = fileInput.files[0];
+
+            if (!importedFile) {
+                alert("Choose a file to import");
+                return;
+            }
+
+            var reader = new FileReader();
+            reader.onload = function () {
+                var fileContent = JSON.parse(reader.result);
+
+                loadPokemon(fileContent);
+                fileInput.value = "";
+            };
+            reader.readAsText(importedFile);
+        };
+
+        const getTime = () => {
+            const now = new Date();
+
+            let h = now.getHours();
+            let m = now.getMinutes();
+            let s = now.getSeconds();
+
+            if (m < 10) m = "0" + m;
+            if (s < 10) s = "0" + s;
+
+            return `${h}h${m} ${s}s`;
+        };
+
+        const setResult = (n) => {
+            document.getElementById("result").innerText = n;
+            document.getElementById("lastRollTime").innerText = getTime();
+        };
+
+        // Middleman! Bad! (╯°□°）╯︵ ┻━┻
+        // But too lazy to fix (∪.∪ )...zzz
+        const roll = (n) => {
+            setResult(getRoll(n));
+        };
+
+        const getRoll = (n) => {
+            return Math.ceil(Math.random() * n);
+        };
+
+        createInfosFields();
+        createMovesFields();
+
+        const getFieldValue = (id) => {
+            return document.getElementById(id).value;
+        };
+
+        document.getElementById("save").addEventListener("click", downloadFile);
+        document
+            .getElementById("loadBtn")
+            .addEventListener("click", importFile);
+
+        document.getElementById("rollAttack").addEventListener("click", () => {
+            roll(getFieldValue("Attack"));
+        });
+        document
+            .getElementById("rollSpAttack")
+            .addEventListener("click", () => {
+                roll(getFieldValue("Sp. Attack"));
+            });
+        document.getElementById("rollDefense").addEventListener("click", () => {
+            roll(getFieldValue("Defense"));
+        });
+        document
+            .getElementById("rollSpDefense")
+            .addEventListener("click", () => {
+                roll(getFieldValue("Sp. Defense"));
+            });
+
+        document.getElementById("rollAny").addEventListener("click", () => {
+            roll(getFieldValue("customRoll"));
+        });
+
+        for (let i = 1; i <= 4; i++) {
+            document
+                .getElementById("rollDamage" + i)
+                .addEventListener("click", () => {
+                    const d10 = getRoll(10);
+                    const power = parseFloat(getFieldValue("power" + i)) || 0;
+                    const level = parseInt(getFieldValue("Level")) || 0;
+
+                    const rolled = (d10 + power) * (level / 10);
+
+                    setResult(Math.ceil(rolled));
+                });
+        }
+    </script>
+</html>
