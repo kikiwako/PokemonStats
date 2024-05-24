@@ -30,6 +30,8 @@
         #container {
             width: 100%;
             max-width: 35rem;
+            max-height: calc(100vh - 7.5rem);
+            overflow-y: auto;
         }
 
         input {
@@ -93,13 +95,53 @@
             width: 3rem;
         }
 
-        #rolls > button {
-            margin-bottom: 0.5rem;
+        #footer {
+            position: absolute;
+            bottom: 0;
+            height: 5rem;
+            background-color: white;
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+            width: 100%;
+            max-width: 35rem;
+            background-color: #eee;
+        }
+
+        #rolls {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            height: 2rem;
+            margin: 0 0.5rem;
+        }
+
+        #rolls > h3 {
+            margin: auto auto auto 0;
+        }
+
+        #lastRollTime {
+            float: right;
+        }
+
+        #notes {
+            width: calc(100% - 0.5rem);
+            height: fit-content;
+            min-height: 10rem;
+        }
+
+        #results {
+            margin: 0 0.5rem;
+        }
+
+        #bottom {
+            margin-bottom: 5rem;
         }
 
         @media (max-width: 600px) {
-            #container {
-                max-width: 100vw;
+            #container,
+            #footer {
+                max-width: 98vw;
             }
         }
     </style>
@@ -113,22 +155,18 @@
             <div id="moves"></div>
             <hr />
 
-            <h3>Rolls</h3>
-            <div id="rolls">
-                <button id="rollAttack">Attack</button>
-                <button id="rollSpAttack">Sp. Attack</button>
-                <button id="rollDefense">Defense</button>
-                <button id="rollSpDefense">Sp. Defense</button>
-                <div>
-                    <input type="number" name="customRoll" id="customRoll" />
-                    <button id="rollAny">Custom</button>
-                </div>
-            </div>
-            <p>
-                Result :
-                <span id="result">0</span>
-            </p>
-            <small id="lastRollTime"></small>
+            <h3>Notes</h3>
+            <textarea id="notes" type="text"></textarea>
+
+            <br />
+            <br />
+
+            <a
+                href="http://www.psypokes.com/dex/stats.php"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Stat Calculator</a
+            >
 
             <br />
             <br />
@@ -139,14 +177,27 @@
                 <button id="loadBtn">Load</button>
             </div>
 
-            <br />
+            <div id="bottom"></div>
 
-            <a
-                href="http://www.psypokes.com/dex/stats.php"
-                target="_blank"
-                rel="noopener noreferrer"
-                >Stat Calculator</a
-            >
+            <div id="footer">
+                <div id="rolls">
+                    <h3>Rolls</h3>
+                    <button id="rollAttack">Attack</button>
+                    <button id="rollSpAttack">Sp. Attack</button>
+                    <button id="rollDefense">Defense</button>
+                    <button id="rollSpDefense">Sp. Defense</button>
+                    <button id="rollAny">Custom</button>
+                    <input type="number" name="customRoll" id="customRoll" />
+                </div>
+
+                <br />
+
+                <div id="results">
+                    Result :
+                    <span id="result">0</span>
+                    <small id="lastRollTime"></small>
+                </div>
+            </div>
         </div>
     </body>
 
@@ -243,7 +294,7 @@
             a.remove();
         };
 
-        const downloadFile = () => {
+        const savePokemon = () => {
             const data = {};
 
             infos.forEach((info) => {
@@ -255,6 +306,8 @@
                     data[move + i] = document.getElementById(move + i).value;
                 });
             }
+
+            data["notes"] = document.getElementById("notes").value;
 
             let filename = data.Species;
             if (data.Name) filename += "_" + data.Name;
@@ -323,7 +376,7 @@
             return document.getElementById(id).value;
         };
 
-        document.getElementById("save").addEventListener("click", downloadFile);
+        document.getElementById("save").addEventListener("click", savePokemon);
         document
             .getElementById("loadBtn")
             .addEventListener("click", importFile);
